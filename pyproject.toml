@@ -1,0 +1,46 @@
+[project]
+name = "pocketchange"
+version = "0.1.0"
+description = "Bounded, revocable spending authority for AI agents"
+readme = "README.md"
+requires-python = ">=3.12,<3.14"
+license = { text = "Apache-2.0" }
+
+dependencies = [
+  "fastapi",
+  "uvicorn",
+  "pynacl",
+  "pyjwt",
+  "httpx",
+  "pydantic",
+  # boto3 is not optional: the ledger, the counterparty book and the model all
+  # reach AWS through it, and `bedrock.available()` is consulted on a health
+  # check that must answer whether or not the extras are installed.
+  "boto3",
+]
+
+[project.optional-dependencies]
+biscuit = ["biscuit-python"]
+# The model boundary. `anthropic[bedrock]` supplies the Messages-API client and
+# schema-enforced structured output; strands-agents is the agent runtime.
+agent = ["anthropic[bedrock]", "strands-agents", "strands-agents-tools"]
+# Cedar, for the authorisation policy evaluated at the /pay enforcement point.
+policy = ["cedarpy"]
+# Only needed to run the gateway behind API Gateway. See deploy/template.yaml.
+lambda = ["mangum"]
+trace = ["langfuse", "opentelemetry-exporter-otlp-proto-http"]
+# moto mocks DynamoDB in-process, so the storage backends are held to the same
+# assertions as the in-memory ones without an AWS account or a container.
+dev = ["pytest", "pytest-asyncio", "ruff", "moto[dynamodb]"]
+
+[project.scripts]
+pocketchange = "pocketchange.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+# Several top-level directories (agent, merchant, eval, spike, scripts) are not
+# importable packages, so auto-discovery cannot tell which one to ship.
+packages = ["pocketchange", "agent", "merchant"]

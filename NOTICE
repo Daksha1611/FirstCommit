@@ -1,0 +1,51 @@
+Pocket Change
+Bounded, revocable spending authority for AI agents.
+
+Copyright 2026 the Pocket Change authors
+  Somay  <somaykaush@gmail.com>          github.com/Somay-kousis
+  Daksh  <mehtadaksha1611@gmail.com>     github.com/Daksha1611
+
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use
+this work except in compliance with the License. You may obtain a copy of the
+License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software distributed
+under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+CONDITIONS OF ANY KIND, either express or implied. See the License for the
+specific language governing permissions and limitations under the License.
+
+-------------------------------------------------------------------------------
+
+History
+
+The enforcement core - the token chain, the ledger, the audit trail, the
+gateway and the agent graph - was written by @Somay-kousis between 2026-08-28
+and 2026-09-01, against Google Cloud services.
+
+The AWS port - Amazon Bedrock, the Strands Agents runtime, the Cedar
+authorisation policy and the DynamoDB storage backends - is documented
+file-by-file in PORTING.md.
+
+-------------------------------------------------------------------------------
+
+Acknowledgements
+
+This project's design borrows openly, and says so in the files where it does:
+
+  * The AI-control pattern the trusted monitor implements - allow, defer to a
+    trusted model, escalate to a human - follows Greenblatt et al.,
+    "AI Control: Improving Safety Despite Intentional Subversion"
+    (arXiv:2312.06942).
+
+  * The control/data separation between the shopper and the payer is the
+    property CaMeL enforces with a custom interpreter; here it falls out of the
+    token chain instead.
+
+  * The graph layout, the node-per-module structure and the structured-chain
+    idiom follow the RabbitHole project's courtroom, which several modules cite
+    directly.
+
+  * Cumulative spend enforcement exists because the Agent Interaction Protocol
+    specifies that it is the runtime's responsibility and not the token's.
