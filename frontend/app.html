@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Pocket Change console — watch a task decompose into a tree of narrower spending authorities." />
+    <title>Pocket Change — Console</title>
+    <link rel="stylesheet" href="/app.css">
+  </head>
+  <body>
+    <div class="shell">
+
+      <!-- ============ SIDEBAR: the money, the limits, the shape ============ -->
+      <aside class="sidebar">
+        <div class="sb-head">
+          <a href="/" class="sb-home">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+              <polyline points="15 18 9 12 15 6"/>
+            </svg>
+            Home
+          </a>
+          <span class="sb-conn" id="conn">checking</span>
+        </div>
+
+        <div class="sb-scroll">
+          <section class="sb-block">
+            <h2 class="sb-title" data-tip-title="Authority" data-tip="The root mandate: what you signed, and how much of it is left. Committed is spent, held is reserved but waiting on a person, available is what the tree can still draw on.">Authority</h2>
+            <p class="mandate-amount num" id="cap">—</p>
+            <p class="mandate-task" id="task-line">No run yet</p>
+            <p class="mandate-id" id="mandate-id"></p>
+
+            <div class="meter"><div class="meter-fill" id="meter"></div></div>
+            <dl class="ledger-lines">
+              <div class="ledger-line"><dt>Committed</dt><dd id="committed">—</dd></div>
+              <div class="ledger-line is-held"><dt>Held</dt><dd id="held">—</dd></div>
+              <div class="ledger-line"><dt>Available</dt><dd id="available">—</dd></div>
+            </dl>
+          </section>
+
+          <section class="sb-block">
+            <h2 class="sb-title" data-tip-title="Funnel profile" data-tip="One bar per layer of the tree. Width is how many agents that layer holds; colour is what happened to them. The funnel narrows because each layer gets a strict share of the layer above.">Funnel profile</h2>
+            <div class="profile" id="profile"></div>
+            <div class="legend">
+              <span><i style="background:var(--ok)"></i>done</span>
+              <span><i style="background:var(--held)"></i>held</span>
+              <span><i style="background:var(--accent)"></i>stopped</span>
+              <span><i style="background:var(--ink-3);opacity:.45"></i>open</span>
+            </div>
+          </section>
+
+          <section class="sb-block approvals-block" id="approvals-block" hidden>
+            <h2 class="sb-title" data-tip-title="Waiting on you" data-tip="Payments the monitor stopped. Nothing moves on these until you decide, and both decisions are written to the audit trail.">Waiting on you</h2>
+            <div id="approvals"></div>
+          </section>
+
+          <section class="sb-block">
+            <h2 class="sb-title" data-tip-title="Bounds" data-tip="The limits the run is actually held to. Enforcement is deterministic and in-path — it cannot be argued with by any model, including ours.">Bounds</h2>
+            <div class="bounds" id="bounds"></div>
+          </section>
+        </div>
+      </aside>
+
+      <!-- ============ MAIN: the run, as it happens ============ -->
+      <main class="main">
+        <div class="main-head">
+          <nav class="tabs" role="tablist">
+            <button class="tab is-on" data-tab="run"     role="tab" data-tip-title="Run" data-tip="The tree as it is built. Every row is one agent holding one token, and the indent is the delegation depth — which is read off the token's block count, never claimed by the agent.">Run</button>
+            <button class="tab" data-tab="ledger"        role="tab" data-tip-title="Ledger" data-tip="Where the money actually went, and the hash-linked audit trail behind it. You can verify the chain yourself and replay any payment to prove it does not charge twice.">Ledger</button>
+            <button class="tab" data-tab="parties"       role="tab" data-tip-title="Counterparties" data-tip="Our record of who we have paid, written at settlement. A seller can inflate its own star rating; it cannot make us have paid it — so this is the one reputation number that cannot be gamed from outside.">Counterparties</button>
+            <button class="tab" data-tab="fleet"         role="tab" data-tip-title="Fleet" data-tip="The agents registered to act, and the widest token each was ever approved to hold. Attenuation stops a token being widened; this stops one being minted too wide in the first place.">Fleet</button>
+            <button class="tab" data-tab="policies"      role="tab" data-tip-title="Policies" data-tip="Recurring spend — reorder rules that tick on their own. Inert until a human approves them, because an injection that lands in a standing policy keeps paying out for months.">Policies</button>
+          </nav>
+          <div class="filters" id="run-filters" role="group" aria-label="Filter nodes">
+            <button class="chip is-on" data-filter="all" data-tip="Every node in the tree, branches and leaves alike.">All</button>
+            <button class="chip" data-filter="paid" data-tip="Only the leaves where money actually moved. Branches delegate; they never pay.">Paid</button>
+            <button class="chip" data-filter="web" data-tip="Nodes that read the open web. These are the ones handling seller-controlled text, and the agent that reads it holds no budget at all.">Web-sourced</button>
+            <button class="chip" data-filter="trouble" data-tip="Anything a bound refused or the monitor held for a person. The rows worth reading first.">Held &amp; stopped</button>
+          </div>
+        </div>
+
+        <p class="pane-note" id="head-note">Say what needs buying. It asks for the rest — then watch the authority narrow.</p>
+
+        <div class="pane transcript" id="pane-run">
+          <div class="empty" id="empty">
+            <h2>What needs buying?</h2>
+            <p>
+              Say it in one line. The agent reads it back, asks for whatever it still
+              needs — and it is never allowed to guess the ceiling. Once you set one,
+              the task decomposes into sub-tasks, each handed a token narrower than its
+              parent's, until the pieces are small enough to simply buy.
+            </p>
+            <div class="empty-chips">
+              <button class="task-chip" data-task="Kit out the new engineering office" data-budget="200000">
+                Kit out the new engineering office <span>₹2,00,000</span>
+              </button>
+              <button class="task-chip" data-task="Refresh design team hardware" data-budget="600000">
+                Refresh design team hardware <span>₹6,00,000</span>
+              </button>
+              <button class="task-chip" data-task="Quarterly consumables restock" data-budget="45000">
+                Quarterly consumables restock <span>₹45,000</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- LEDGER -->
+        <div class="pane" id="pane-ledger" hidden>
+          <section class="card">
+            <header class="card-head">
+              <h2>Two layers, measured</h2>
+              <span class="hint">enforcement always runs; judgement is one model call</span>
+            </header>
+            <div class="latency" id="latency"></div>
+          </section>
+
+          <section class="card">
+            <header class="card-head">
+              <h2>Audit chain</h2>
+              <button class="mini-btn" id="verify-chain" data-tip-title="Verify chain" data-tip="Recomputes every hash in the audit log from the entry before it. If one row were edited or removed after the fact, the chain breaks here and names the entry.">Verify chain</button>
+            </header>
+            <div class="chain" id="chain"><p class="sb-empty">Not checked yet.</p></div>
+          </section>
+
+          <section class="card">
+            <header class="card-head">
+              <h2>The trail</h2>
+              <div class="filters" role="group" aria-label="Filter the trail">
+                <button class="chip is-on" data-audit="all" data-tip="Every entry, in the order it was written.">All</button>
+                <button class="chip" data-audit="allowed" data-tip="Passed all nine checks and settled.">Allowed</button>
+                <button class="chip" data-audit="escalated" data-tip="Enforcement passed, but the monitor thought a person should look. The money is reserved, not spent.">Held</button>
+                <button class="chip" data-audit="denied" data-tip="Refused by the deterministic layer — scope, budget, depth, expiry or a replayed key. No model was involved in saying no.">Denied</button>
+              </div>
+            </header>
+            <div class="table-wrap"><table class="grid" id="audit-table"></table></div>
+          </section>
+        </div>
+
+        <!-- COUNTERPARTIES -->
+        <div class="pane" id="pane-parties" hidden>
+          <section class="card">
+            <header class="card-head">
+              <h2>Who we have paid</h2>
+              <span class="hint">our record, written at settlement — not the seller's</span>
+            </header>
+            <div class="table-wrap"><table class="grid" id="parties-table"></table></div>
+            <p class="card-foot">
+              A supplier can inflate its own star rating; it cannot make us have paid
+              it. <b>A tally is not a reputation</b> — anything with concerns sorts
+              first, because the biggest number must not bury the row worth reading.
+            </p>
+          </section>
+        </div>
+
+        <!-- FLEET -->
+        <div class="pane" id="pane-fleet" hidden>
+          <section class="card">
+            <header class="card-head">
+              <h2>The fleet</h2>
+              <span class="hint">a second bound, and one that fails differently</span>
+            </header>
+            <div class="table-wrap"><table class="grid" id="fleet-table"></table></div>
+            <p class="card-foot">
+              Attenuation stops a token being <i>widened</i>. The registry stops one
+              being <i>minted</i> wider than the agent was ever approved to hold. Two
+              checks that fail for different reasons, so a bug in one does not
+              disable the other.
+            </p>
+          </section>
+        </div>
+
+        <!-- POLICIES -->
+        <div class="pane" id="pane-policies" hidden>
+          <section class="card">
+            <header class="card-head">
+              <h2>Standing policies</h2>
+              <span class="hint">recurring spend, inert until a human approves it</span>
+            </header>
+            <div id="policies"></div>
+            <p class="card-foot">
+              Persistence changes the shape of an injection. One against an errand
+              buys the wrong thing once; one that lands while a recurring policy is
+              being written keeps paying out for months — and the mechanism that
+              makes ticks cheap (pure arithmetic, no model) is exactly what stops
+              anything noticing later. So a policy does nothing until approved.
+            </p>
+          </section>
+        </div>
+
+        <p class="degraded" id="degraded" hidden></p>
+
+        <!-- Intake lives OUTSIDE every pane on purpose: drawTranscript replaces
+             #pane-run wholesale each time the tree grows, which would delete a
+             half-answered question and the listeners attached to it. -->
+        <div class="intake" id="intake" hidden aria-live="polite"></div>
+
+        <div class="composer">
+          <div class="composer-box">
+            <textarea id="task" class="composer-ta" rows="1"
+                      data-tip-title="Just say it in one line"
+                      data-tip="No fields to fill in. Write what needs buying and the agent asks for anything it still needs — starting with the ceiling, which is the one number it is not allowed to guess."
+                      placeholder="Say what needs buying — the agent will ask the rest…"></textarea>
+            <button class="send" id="send" disabled aria-label="Read this request"
+                    data-tip="Reads your request. It does not start spending — nothing is minted until you confirm a ceiling.">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+              </svg>
+            </button>
+          </div>
+          <div class="composer-opts">
+            <label class="opt"
+                   data-tip-title="Semantic monitor"
+                   data-tip-full="A second, trusted model reads every payment against what you authorised and can allow it, cut it down, or hold it for you. Switching it off removes no cryptographic guarantee — the two layers are separable — and costs one model call per leaf less."
+                   data-tip="A second, trusted model reads every payment against what you authorised and can allow it, cut it down, or hold it for you. Switching it off removes no cryptographic guarantee — the two layers are separable — and costs one model call per leaf less.">
+              <input type="checkbox" id="opt-monitor" checked />
+              <span>Semantic monitor</span>
+            </label>
+            <span class="opt-cost" id="opt-cost"
+                  data-tip="Every branch of the tree costs one model call to split, and every leaf one to judge. Shown before you commit, because a run that outruns the quota fails halfway with the monitor failing open — which looks exactly like approval."></span>
+          </div>
+          <p class="composer-note" id="note">
+            The ceiling is <b>cryptographic</b>, not a setting — it lives in the token,
+            and no agent below can raise it.
+          </p>
+        </div>
+      </main>
+
+      <!-- token inspector -->
+      <aside class="drawer" id="drawer" hidden aria-label="Token inspector">
+        <header class="drawer-head">
+          <div>
+            <h2 id="drawer-title">Token</h2>
+            <p id="drawer-sub"></p>
+          </div>
+          <button class="drawer-x" id="drawer-close" aria-label="Close">&times;</button>
+        </header>
+        <div class="drawer-body" id="drawer-body"></div>
+        <p class="drawer-foot">
+          The signed token itself never leaves the gateway. A live <code>pay</code>
+          token is a bearer credential — anything in a browser is one devtools tab
+          from being copied. These are the constraints it carries, not the token.
+        </p>
+      </aside>
+
+    </div>
+    <div class="tip" id="tip" role="tooltip" hidden></div>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

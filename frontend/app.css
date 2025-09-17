@@ -1,0 +1,844 @@
+/* ============================================================================
+   Pocket Change — the console
+
+   Same product as the cover, so the same materials: sage ground, dot texture,
+   VT323 for numerals, coral for the one thing that wants your eye. The old
+   console was a warm-white stone theme with seven near-neon agent colours; it
+   was legible, but it belonged to a different application than the one on the
+   front page.
+
+   Colour is spent on state and nothing else:
+
+     forest green   done — the resting, ordinary outcome
+     amber          held — waiting on a person, money still reserved
+     coral          stopped — refused, and the accent the cover already uses
+
+   There is no eighth colour for "this is a card". Structure is carried by
+   rules, indentation and space, the way the guarantee list on the cover does.
+   ========================================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=VT323&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  --bg:          #deeae4;
+  --bg-2:        #eaf2ed;
+  --bg-3:        #f3f8f5;
+  --bg-deep:     #1f2e27;
+
+  --ink:         #1b2820;
+  --ink-2:       #3d5447;
+  --ink-3:       #6d8e7e;
+
+  --rule:        rgba(0, 0, 0, 0.09);
+  --rule-2:      rgba(0, 0, 0, 0.16);
+  --surface:     rgba(255, 255, 255, 0.62);
+
+  --accent:      #d85a4e;
+  --accent-dk:   #b04440;
+  --accent-soft: rgba(216, 90, 78, 0.10);
+
+  --ok:          #2f6b4f;
+  --ok-soft:     rgba(47, 107, 79, 0.10);
+  --held:        #b07d2a;
+  --held-soft:   rgba(176, 125, 42, 0.12);
+
+  --mono:    'JetBrains Mono', ui-monospace, 'Courier New', monospace;
+  --body:    'Inter', system-ui, -apple-system, sans-serif;
+  --display: 'VT323', 'JetBrains Mono', monospace;
+
+  --sb: 328px;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  font-family: var(--body);
+  font-size: 15px;
+  line-height: 1.6;
+  background: var(--bg);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+body {
+  background-image: radial-gradient(rgba(0,0,0,0.06) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+a { color: inherit; text-decoration: none; }
+button { font: inherit; color: inherit; cursor: pointer; background: none; border: none; }
+
+:where(a, button, input, textarea):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.mono { font-family: var(--mono); }
+.num  { font-variant-numeric: tabular-nums; }
+
+/* ===========================================================================
+   SHELL
+   ======================================================================== */
+
+.shell { display: grid; grid-template-columns: var(--sb) 1fr; height: 100dvh; }
+
+/* ===========================================================================
+   SIDEBAR
+   ======================================================================== */
+
+.sidebar {
+  background: var(--bg-2);
+  border-right: 1px solid var(--rule);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+
+.sb-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 0.75rem; padding: 0.9rem 1.15rem;
+  border-bottom: 1px solid var(--rule); flex-shrink: 0;
+}
+.sb-home {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  font-size: 0.82rem; font-weight: 500; color: var(--ink-2);
+  transition: color 0.18s var(--ease);
+}
+.sb-home:hover { color: var(--accent); }
+.sb-conn {
+  display: inline-flex; align-items: center; gap: 0.35rem;
+  font-family: var(--mono); font-size: 0.66rem;
+  text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-3);
+}
+.sb-conn::before {
+  content: ''; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--ink-3);
+}
+.sb-conn.is-live::before { background: var(--ok); box-shadow: 0 0 0 3px var(--ok-soft); }
+.sb-conn.is-live { color: var(--ok); }
+.sb-conn.is-off::before  { background: var(--accent); }
+.sb-conn.is-off  { color: var(--accent); }
+
+.sb-scroll { overflow-y: auto; flex: 1; }
+
+.sb-block { padding: 1.15rem; border-bottom: 1px solid var(--rule); }
+.sb-title {
+  font-family: var(--mono); font-size: 0.64rem; font-weight: 500;
+  text-transform: uppercase; letter-spacing: 0.14em; color: var(--ink-3);
+  margin-bottom: 0.8rem;
+}
+
+/* --- the mandate: the one number a human signed -------------------------- */
+
+.mandate-amount {
+  font-family: var(--display); font-size: 3.1rem; line-height: 0.9;
+  letter-spacing: 0.01em; color: var(--ink);
+}
+.mandate-task {
+  font-size: 0.83rem; color: var(--ink-2); margin-top: 0.4rem;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.mandate-id {
+  font-family: var(--mono); font-size: 0.66rem; color: var(--ink-3);
+  margin-top: 0.35rem;
+}
+
+.meter {
+  height: 4px; background: rgba(0,0,0,0.09);
+  border-radius: 100px; overflow: hidden; margin: 0.85rem 0 0.55rem;
+}
+.meter-fill {
+  height: 100%; width: 0; background: var(--ok);
+  transition: width 0.5s var(--ease);
+}
+.meter-fill[data-level="mid"]  { background: var(--held); }
+.meter-fill[data-level="high"] { background: var(--accent); }
+
+.ledger-lines { display: grid; gap: 0.3rem; }
+.ledger-line {
+  display: flex; justify-content: space-between; align-items: baseline;
+  gap: 0.75rem; font-size: 0.79rem;
+}
+.ledger-line dt { color: var(--ink-3); }
+.ledger-line dd { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.ledger-line.is-held dd { color: var(--held); }
+
+/* --- funnel profile: how wide the tree is at each depth ------------------ */
+
+.profile { display: grid; gap: 0.3rem; }
+.profile-row {
+  display: grid; grid-template-columns: 1.6rem 1fr 1.9rem;
+  align-items: center; gap: 0.5rem;
+  font-family: var(--mono); font-size: 0.68rem; color: var(--ink-3);
+}
+.profile-bar {
+  display: flex; height: 9px; border-radius: 2px; overflow: hidden;
+  background: rgba(0,0,0,0.06);
+}
+.profile-bar span { display: block; height: 100%; }
+.profile-bar .p-done { background: var(--ok); }
+.profile-bar .p-held { background: var(--held); }
+.profile-bar .p-stop { background: var(--accent); }
+.profile-bar .p-open { background: var(--ink-3); opacity: 0.45; }
+.profile-n { text-align: right; color: var(--ink-2); }
+
+.legend {
+  display: flex; flex-wrap: wrap; gap: 0.7rem; margin-top: 0.8rem;
+  font-family: var(--mono); font-size: 0.63rem; color: var(--ink-3);
+}
+.legend span { display: inline-flex; align-items: center; gap: 0.3rem; }
+.legend i { width: 8px; height: 8px; border-radius: 2px; display: inline-block; }
+
+/* --- bounds -------------------------------------------------------------- */
+
+.bounds { display: grid; gap: 0.55rem; }
+.bound { display: grid; grid-template-columns: 1fr auto; gap: 0.1rem 0.6rem; }
+.bound-name { font-size: 0.8rem; }
+.bound-val {
+  font-family: var(--mono); font-size: 0.75rem;
+  font-variant-numeric: tabular-nums; color: var(--ink-2);
+}
+.bound-val em { font-style: normal; color: var(--ink-3); }
+.bound-note { grid-column: 1 / -1; font-size: 0.69rem; color: var(--ink-3); line-height: 1.45; }
+/* The first two end the recursion normally. Marking them like faults would
+   train the reader to ignore the ones that are. */
+.bound-fault .bound-name::after {
+  content: 'fault'; font-family: var(--mono); font-size: 0.58rem;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--ink-3); margin-left: 0.45rem;
+}
+/* Six of these are arithmetic and certain; the critic is a model's opinion.
+   A reader deciding how far to trust a row needs to know which kind it is. */
+.bound-judged .bound-name::after { content: 'judgement'; }
+.bound-judged { border-left: 2px dashed var(--ink-3); padding-left: 0.6rem; }
+
+.bound.is-hit .bound-name, .bound.is-hit .bound-val { color: var(--accent); }
+.bound.is-hit .bound-name::after { color: var(--accent); }
+
+/* --- approvals ----------------------------------------------------------- */
+
+.sb-block.approvals-block { background: var(--held-soft); }
+.approval { display: grid; gap: 0.4rem; }
+.approval + .approval { margin-top: 0.9rem; padding-top: 0.9rem; border-top: 1px solid var(--rule); }
+.approval-amt {
+  font-family: var(--display); font-size: 1.9rem; line-height: 1; color: var(--held);
+}
+.approval-why { font-size: 0.79rem; color: var(--ink-2); }
+/* A recurring policy and a single held payment are different promises, and the
+   card must not read the same for both. */
+.approval-kind {
+  display: block; font-family: var(--body); font-size: 0.68rem;
+  font-weight: 400; color: var(--ink-3); letter-spacing: 0;
+}
+.approval-claim { font-size: 0.73rem; color: var(--ink-3); }
+.approval-btns { display: flex; gap: 0.4rem; margin-top: 0.2rem; }
+.approval-btns button {
+  flex: 1; padding: 0.4rem; font-size: 0.75rem; font-family: var(--mono);
+  border: 1px solid var(--rule-2); border-radius: 3px; background: var(--surface);
+  transition: all 0.18s var(--ease);
+}
+.approval-btns .yes:hover { border-color: var(--ok); color: var(--ok); background: var(--ok-soft); }
+.approval-btns .no:hover  { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+.approval-btns button:disabled { opacity: 0.5; cursor: progress; }
+
+.sb-empty { font-size: 0.79rem; color: var(--ink-3); }
+
+/* --- two layers, measured ------------------------------------------------ */
+
+.latency { display: grid; gap: 0.55rem; }
+.lat-row { display: grid; grid-template-columns: 1fr auto; gap: 0.1rem 0.6rem; align-items: baseline; }
+.lat-name { font-size: 0.8rem; }
+.lat-val {
+  font-family: var(--mono); font-size: 0.86rem; font-variant-numeric: tabular-nums;
+}
+.lat-bar { grid-column: 1 / -1; height: 4px; background: rgba(0,0,0,0.07); border-radius: 2px; overflow: hidden; }
+.lat-bar span { display: block; height: 100%; background: var(--ok); }
+.lat-row.is-slow .lat-val { color: var(--held); }
+.lat-row.is-slow .lat-bar span { background: var(--held); }
+.lat-note { font-size: 0.69rem; color: var(--ink-3); grid-column: 1 / -1; }
+
+.sb-foot { font-size: 0.7rem; color: var(--ink-3); margin-top: 0.7rem; line-height: 1.45; }
+
+/* --- counterparties ------------------------------------------------------- */
+
+.parties { display: grid; gap: 0.6rem; }
+.party {
+  display: grid; grid-template-columns: 1fr auto; gap: 0.1rem 0.6rem;
+  padding-left: 0.6rem; border-left: 2px solid var(--rule-2);
+}
+.party.has-trouble { border-left-color: var(--accent); }
+.party-id {
+  font-family: var(--mono); font-size: 0.76rem;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.party-orders {
+  font-family: var(--mono); font-size: 0.74rem; color: var(--ink-2);
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+/* Concerns lead visually as well as textually: a long tally must not read as
+   reassurance when there are refusals sitting behind it. */
+.party-concerns {
+  grid-column: 1 / -1; font-size: 0.71rem; color: var(--accent); line-height: 1.4;
+}
+.party-quiet { grid-column: 1 / -1; font-size: 0.71rem; color: var(--ink-3); }
+
+/* --- audit chain ---------------------------------------------------------- */
+
+.chain { display: grid; gap: 0.3rem; margin-bottom: 0.7rem; }
+.chain-state { font-size: 0.82rem; font-weight: 500; }
+.chain-state.ok  { color: var(--ok); }
+.chain-state.bad { color: var(--accent); }
+.chain-head {
+  font-family: var(--mono); font-size: 0.66rem; color: var(--ink-3);
+  word-break: break-all; line-height: 1.4;
+}
+.chain-proves { font-size: 0.69rem; color: var(--ink-3); line-height: 1.45; }
+
+.wide-btn {
+  width: 100%; padding: 0.45rem; border: 1px solid var(--rule-2);
+  border-radius: 3px; background: var(--surface); font-family: var(--mono);
+  font-size: 0.75rem; transition: all 0.18s var(--ease);
+}
+.wide-btn:hover { border-color: var(--ink); }
+.wide-btn:disabled { opacity: 0.5; cursor: progress; }
+
+/* --- composer options ----------------------------------------------------- */
+
+.composer-opts {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 0.8rem; margin-top: 0.55rem; flex-wrap: wrap;
+}
+.opt { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.76rem; color: var(--ink-2); }
+.opt input { accent-color: var(--ink); }
+.opt-cost { font-family: var(--mono); font-size: 0.7rem; color: var(--ink-3); }
+.opt-cost.is-tight { color: var(--held); }
+
+/* --- replay action on a settled row --------------------------------------- */
+
+.row-actions { grid-column: 1 / -1; display: flex; gap: 0.4rem; padding-top: 0.35rem; }
+.mini-btn {
+  font-family: var(--mono); font-size: 0.68rem; padding: 0.15rem 0.5rem;
+  border: 1px solid var(--rule-2); border-radius: 3px; background: var(--bg-3);
+  transition: all 0.18s var(--ease);
+}
+.mini-btn:hover { border-color: var(--ink); }
+.mini-btn:disabled { opacity: 0.5; cursor: progress; }
+.replay-out {
+  font-family: var(--mono); font-size: 0.7rem; color: var(--ok);
+  align-self: center;
+}
+.replay-out.bad { color: var(--accent); }
+
+/* --- token inspector drawer ------------------------------------------------ */
+
+.drawer {
+  position: fixed; top: 0; right: 0; bottom: 0; width: min(30rem, 92vw);
+  background: var(--bg-3); border-left: 1px solid var(--rule-2);
+  box-shadow: -12px 0 34px rgba(0,0,0,0.10);
+  display: flex; flex-direction: column; z-index: 40;
+}
+.drawer[hidden] { display: none; }
+.drawer-head {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 1rem; padding: 1rem 1.2rem; border-bottom: 1px solid var(--rule);
+}
+.drawer-head h2 { font-size: 0.95rem; font-weight: 600; }
+.drawer-head p { font-family: var(--mono); font-size: 0.72rem; color: var(--ink-3); margin-top: 0.2rem; }
+.drawer-x { font-size: 1.3rem; line-height: 1; color: var(--ink-3); padding: 0 0.3rem; }
+.drawer-x:hover { color: var(--accent); }
+.drawer-body { flex: 1; overflow-y: auto; padding: 0.9rem 1.2rem; }
+.drawer-foot {
+  padding: 0.8rem 1.2rem; border-top: 1px solid var(--rule);
+  font-size: 0.7rem; color: var(--ink-3); line-height: 1.5;
+}
+.drawer-foot code { font-family: var(--mono); }
+
+.blk { margin-bottom: 1rem; }
+.blk-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 0.6rem; margin-bottom: 0.3rem;
+}
+.blk-n {
+  font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--ink-3);
+}
+.blk-kind { font-size: 0.74rem; color: var(--ink-2); }
+.blk-src {
+  font-family: var(--mono); font-size: 0.7rem; line-height: 1.6;
+  background: var(--bg-2); border: 1px solid var(--rule);
+  border-radius: 3px; padding: 0.6rem 0.7rem; white-space: pre-wrap;
+  word-break: break-word; color: var(--ink);
+}
+.blk-src .chk { color: var(--accent); }
+
+/* ===========================================================================
+   MAIN — the transcript
+   ======================================================================== */
+
+.main { display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+
+.main-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 1rem; flex-wrap: wrap;
+  padding: 1rem 1.6rem; border-bottom: 1px solid var(--rule); flex-shrink: 0;
+}
+.main-head h1 { font-size: 1.02rem; font-weight: 600; letter-spacing: -0.01em; }
+.main-head p { font-size: 0.79rem; color: var(--ink-3); }
+
+.filters { display: flex; gap: 0.3rem; flex-wrap: wrap; }
+.chip {
+  font-family: var(--mono); font-size: 0.68rem;
+  padding: 0.22rem 0.6rem; border-radius: 100px;
+  border: 1px solid var(--rule-2); color: var(--ink-2);
+  transition: all 0.18s var(--ease);
+}
+.chip:hover { border-color: var(--ink-3); }
+.chip.is-on { background: var(--ink); color: var(--bg-2); border-color: var(--ink); }
+
+.transcript { flex: 1; overflow-y: auto; padding: 0 1.6rem 2rem; }
+
+/* --- empty state --------------------------------------------------------- */
+
+.empty { max-width: 34rem; margin: 5rem auto 0; text-align: left; }
+.empty h2 {
+  font-family: var(--display); font-size: 3.4rem; line-height: 0.95;
+  font-weight: 400; letter-spacing: 0.01em; margin-bottom: 0.7rem;
+}
+.empty p { color: var(--ink-2); margin-bottom: 1.6rem; }
+.empty-chips { display: flex; flex-direction: column; gap: 0.5rem; }
+.task-chip {
+  text-align: left; padding: 0.7rem 0.9rem; font-size: 0.85rem;
+  background: var(--surface); border: 1px solid var(--rule);
+  border-radius: 4px; transition: all 0.18s var(--ease);
+}
+.task-chip:hover { border-color: var(--accent); color: var(--accent-dk); transform: translateX(2px); }
+.task-chip span { font-family: var(--mono); font-size: 0.74rem; color: var(--ink-3); }
+.task-chip:hover span { color: var(--accent); }
+
+/* --- the run ------------------------------------------------------------- */
+
+.run-head { padding: 1.5rem 0 0.9rem; border-bottom: 1px solid var(--rule-2); }
+.run-task { font-size: 1.15rem; font-weight: 600; letter-spacing: -0.01em; }
+.run-meta {
+  font-family: var(--mono); font-size: 0.7rem; color: var(--ink-3);
+  margin-top: 0.3rem; display: flex; gap: 0.9rem; flex-wrap: wrap;
+}
+
+.layer { border-bottom: 1px solid var(--rule); }
+.layer-head {
+  display: flex; align-items: baseline; gap: 0.7rem;
+  padding: 1.1rem 0 0.5rem;
+  font-family: var(--mono); font-size: 0.66rem;
+  text-transform: uppercase; letter-spacing: 0.14em; color: var(--ink-3);
+}
+.layer-head b { font-weight: 500; color: var(--ink-2); }
+.layer-head hr { flex: 1; border: none; border-top: 1px solid var(--rule); }
+
+/* One editorial row per node — the guarantee-list rhythm from the cover. */
+.row {
+  display: grid;
+  grid-template-columns: 2.4rem minmax(0, 1fr) auto 7rem 4.5rem;
+  gap: 0.4rem 0.9rem; align-items: baseline;
+  padding: 0.5rem 0.4rem 0.5rem 0;
+  border-left: 2px solid transparent; padding-left: 0.6rem;
+  transition: background 0.18s var(--ease);
+}
+.row:hover { background: var(--surface); }
+
+.row-seq {
+  font-family: var(--mono); font-size: 0.68rem; color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+.row-body { min-width: 0; }
+.row-task {
+  font-size: 0.87rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.row-id { font-family: var(--mono); font-size: 0.68rem; color: var(--ink-3); }
+.row-note { font-size: 0.73rem; color: var(--ink-3); margin-top: 0.1rem; }
+
+.tools { display: flex; gap: 0.22rem; }
+.tool {
+  font-family: var(--mono); font-size: 0.61rem; letter-spacing: 0.02em;
+  padding: 0.05rem 0.34rem; border-radius: 2px;
+  border: 1px solid var(--rule-2); color: var(--ink-3);
+}
+/* Whether a node can delegate is the most informative thing about it: one that
+   holds `pay` alone is a leaf that cannot recruit anything. */
+.tool.t-delegate { color: var(--ink); border-color: var(--ink-3); font-weight: 500; }
+.tool.t-search   { border-style: dashed; }
+.tool.t-mandate  { color: var(--accent); border-color: var(--accent); }
+.tool.t-broker   { color: var(--ink-2); border-style: dashed; }
+
+.row-amt {
+  font-family: var(--mono); font-size: 0.8rem; text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.row-state {
+  font-family: var(--mono); font-size: 0.64rem; text-align: right;
+  text-transform: uppercase; letter-spacing: 0.07em; color: var(--ink-3);
+}
+
+.row.is-done .row-state { color: var(--ok); }
+.row.is-held  { border-left-color: var(--held); background: var(--held-soft); }
+.row.is-held  .row-state { color: var(--held); }
+.row.is-stop  { border-left-color: var(--accent); background: var(--accent-soft); }
+.row.is-stop  .row-state { color: var(--accent); }
+.row.is-live  { border-left-color: var(--ink-3); }
+.row.is-live  .row-state { color: var(--ink-2); }
+
+/* A looker holds nothing and is not the work. Quieter, on purpose. */
+.row.is-helper .row-task { color: var(--ink-3); font-style: italic; }
+.row.is-helper .row-amt  { color: var(--ink-3); }
+
+.web-tag {
+  font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.04em;
+  color: var(--ink-3); border: 1px solid var(--rule-2); border-style: dashed;
+  border-radius: 100px; padding: 0 0.36rem; margin-left: 0.4rem;
+  white-space: nowrap;
+}
+
+.tail {
+  padding: 1.2rem 0.6rem; font-size: 0.82rem; color: var(--ink-2);
+  display: flex; align-items: center; gap: 0.5rem;
+}
+.tail::before {
+  content: ''; width: 7px; height: 7px; border-radius: 50%;
+  background: var(--ok); animation: breathe 1.6s ease-in-out infinite;
+}
+.tail.is-done::before { animation: none; }
+@keyframes breathe { 0%,100% { opacity: 0.25; } 50% { opacity: 1; } }
+
+/* --- tabs ----------------------------------------------------------------- */
+
+.tabs { display: flex; gap: 0.15rem; flex-wrap: wrap; }
+.tab {
+  font-size: 0.84rem; padding: 0.3rem 0.7rem; border-radius: 3px;
+  color: var(--ink-3); transition: all 0.18s var(--ease);
+}
+.tab:hover { color: var(--ink); background: var(--surface); }
+.tab.is-on { color: var(--ink); font-weight: 600; background: var(--bg-3); }
+
+.pane-note {
+  padding: 0 1.6rem; font-size: 0.79rem; color: var(--ink-3);
+  flex-shrink: 0; margin-top: 0.6rem;
+}
+
+.pane { flex: 1; overflow-y: auto; padding: 0 1.6rem 2rem; }
+.pane[hidden] { display: none; }
+
+/* --- cards, for the reference panes --------------------------------------- */
+
+.card {
+  margin-top: 1.2rem; background: var(--bg-3);
+  border: 1px solid var(--rule); border-radius: 5px; overflow: hidden;
+}
+.card-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 1rem; flex-wrap: wrap;
+  padding: 0.8rem 1rem; border-bottom: 1px solid var(--rule); background: var(--bg-2);
+}
+.card-head h2 { font-size: 0.95rem; font-weight: 600; }
+.hint { font-size: 0.74rem; color: var(--ink-3); }
+.card-foot {
+  padding: 0.8rem 1rem; border-top: 1px solid var(--rule);
+  font-size: 0.76rem; color: var(--ink-2); line-height: 1.55;
+}
+.card > .latency, .card > .chain, .card > #policies { padding: 1rem; }
+
+/* --- data grids ----------------------------------------------------------- */
+
+.table-wrap { overflow-x: auto; max-height: 30rem; overflow-y: auto; }
+.grid { width: 100%; border-collapse: collapse; font-size: 0.82rem; min-width: 40rem; }
+.grid thead th {
+  position: sticky; top: 0; z-index: 1; text-align: left;
+  background: var(--bg-2); padding: 0.45rem 0.8rem;
+  border-bottom: 1px solid var(--rule-2);
+  font-family: var(--mono); font-size: 0.64rem; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--ink-3); font-weight: 500; white-space: nowrap;
+}
+.grid td { padding: 0.4rem 0.8rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+.grid tbody tr:hover { background: var(--surface); }
+.grid .n { font-family: var(--mono); font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+.grid .m { font-family: var(--mono); font-size: 0.76rem; white-space: nowrap; }
+.grid .wrap { color: var(--ink-2); }
+
+.verdict {
+  font-family: var(--mono); font-size: 0.66rem; text-transform: uppercase;
+  letter-spacing: 0.06em; padding: 0.05rem 0.4rem; border-radius: 3px; border: 1px solid;
+  white-space: nowrap;
+}
+.verdict.ok   { color: var(--ok);     border-color: var(--ok); }
+.verdict.held { color: var(--held);   border-color: var(--held); }
+.verdict.bad  { color: var(--accent); border-color: var(--accent); }
+
+/* A payment that settled without judgement must never read as one that was
+   judged and approved. */
+.unjudged {
+  font-family: var(--mono); font-size: 0.62rem; color: var(--held);
+  border: 1px dashed var(--held); border-radius: 3px; padding: 0 0.3rem; margin-left: 0.3rem;
+}
+
+.row-trouble td:first-child { box-shadow: inset 2px 0 0 var(--accent); }
+.row-held td:first-child    { box-shadow: inset 2px 0 0 var(--held); }
+
+.cap-chip {
+  font-family: var(--mono); font-size: 0.66rem; padding: 0.02rem 0.34rem;
+  border: 1px solid var(--rule-2); border-radius: 3px; margin-right: 0.2rem;
+  display: inline-block;
+}
+.badge-no { color: var(--accent); border-color: var(--accent); }
+
+/* ===========================================================================
+   COMPOSER
+   ======================================================================== */
+
+.composer { padding: 0.9rem 1.6rem 1.3rem; flex-shrink: 0; }
+.composer-box {
+  display: grid; grid-template-columns: 1fr auto;
+  gap: 0.6rem; align-items: end;
+  background: var(--bg-3); border: 1px solid var(--rule-2);
+  border-radius: 6px; padding: 0.6rem 0.6rem 0.6rem 0.9rem;
+  transition: border-color 0.18s var(--ease);
+}
+.composer-box:focus-within { border-color: var(--ink-3); }
+
+.composer-ta {
+  border: none; background: none; resize: none; outline: none;
+  font-family: var(--body); font-size: 0.92rem; line-height: 1.5;
+  color: var(--ink); max-height: 8rem; padding: 0.3rem 0;
+}
+.composer-ta::placeholder { color: var(--ink-3); }
+
+.send {
+  width: 32px; height: 32px; border-radius: 4px;
+  display: grid; place-items: center;
+  background: var(--ink); color: var(--bg-2);
+  transition: all 0.18s var(--ease);
+}
+.send:hover:not(:disabled) { background: var(--accent); }
+.send:disabled { opacity: 0.3; cursor: not-allowed; }
+
+.composer-note {
+  font-size: 0.71rem; color: var(--ink-3); margin-top: 0.5rem; padding-left: 0.2rem;
+}
+.composer-note b { font-weight: 500; color: var(--ink-2); }
+
+/* ===========================================================================
+   RESPONSIVE / MOTION
+   ======================================================================== */
+
+@media (max-width: 960px) {
+  html, body { overflow: auto; }
+  .shell { grid-template-columns: 1fr; height: auto; }
+  .sidebar { border-right: none; border-bottom: 1px solid var(--rule-2); }
+  .main { height: auto; }
+  .transcript { overflow: visible; }
+  .row {
+    grid-template-columns: 2.4rem minmax(0, 1fr) auto;
+    row-gap: 0.25rem;
+  }
+  .row-amt   { grid-column: 2; text-align: left; }
+  .row-state { grid-column: 3; }
+  .composer { position: sticky; bottom: 0; background: var(--bg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important; animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+
+/* ===========================================================================
+   INTAKE — the front door, as a conversation
+
+   The composer used to demand a task AND a ceiling typed into an unlabelled
+   numeric box. This is the same width and the same materials, but the questions
+   arrive one card at a time and each carries the reason it had to be asked.
+   ======================================================================== */
+
+.intake {
+  /* A sibling of the panes, not a child of one: the run pane is rewritten
+     wholesale on every event, and a question living inside it would vanish
+     mid-answer. Capped and scrollable so a long exchange never squeezes the
+     tree above it out of view. */
+  flex-shrink: 0; max-height: 58vh; overflow-y: auto;
+  padding: 1.1rem 1.6rem 0.2rem;
+  border-top: 1px solid var(--rule);
+  display: flex; flex-direction: column; gap: 0.7rem;
+}
+.in-thread {
+  width: 100%; max-width: 40rem; margin: 0 auto;
+  display: flex; flex-direction: column; gap: 0.7rem;
+}
+
+.in-said {
+  align-self: flex-end; max-width: 80%;
+  background: var(--ink); color: var(--bg-2);
+  padding: 0.5rem 0.85rem; border-radius: 12px 12px 3px 12px;
+  font-size: 0.87rem; line-height: 1.5;
+}
+
+.in-card {
+  background: var(--bg-3); border: 1px solid var(--rule-2);
+  border-radius: 3px 12px 12px 12px; padding: 0.95rem 1.05rem;
+  animation: in-rise 0.34s var(--ease) both;
+}
+@keyframes in-rise {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.in-label {
+  font-family: var(--mono); font-size: 0.63rem; font-weight: 500;
+  text-transform: uppercase; letter-spacing: 0.14em; color: var(--ink-3);
+  margin-bottom: 0.45rem;
+}
+.in-goal { font-size: 0.95rem; color: var(--ink); line-height: 1.5; }
+.in-foot { font-family: var(--mono); font-size: 0.66rem; color: var(--ink-3); margin-top: 0.6rem; }
+.in-note { font-size: 0.74rem; color: var(--held); padding-left: 0.2rem; }
+
+.in-tags { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.65rem; }
+.in-tag {
+  font-family: var(--mono); font-size: 0.68rem; color: var(--ink-2);
+  border: 1px solid var(--rule-2); border-radius: 3px; padding: 0.1rem 0.42rem;
+}
+.in-tag.is-item { background: var(--surface); }
+
+/* --- a question ---------------------------------------------------------- */
+
+.in-q { border-left: 2px solid var(--ink-3); }
+/* Confirming is a different act from answering: the figure came out of text we
+   do not trust, and the amber says so before the sentence does. */
+.in-q.is-confirming { border-left-color: var(--held); background: var(--held-soft); }
+
+.in-ask { font-size: 0.95rem; font-weight: 500; color: var(--ink); }
+.in-why {
+  font-size: 0.78rem; color: var(--ink-2); line-height: 1.55;
+  margin: 0.35rem 0 0.8rem; max-width: 34rem;
+}
+
+.in-money { display: flex; gap: 0.5rem; align-items: stretch; }
+.in-rupee {
+  display: flex; align-items: center; gap: 0.25rem;
+  background: var(--bg-2); border: 1px solid var(--rule-2); border-radius: 4px;
+  padding: 0 0.7rem; font-family: var(--mono); color: var(--ink-2);
+}
+.in-input {
+  width: 8rem; border: none; background: none; outline: none;
+  font-family: var(--mono); font-size: 0.95rem; color: var(--ink);
+  font-variant-numeric: tabular-nums; padding: 0.5rem 0;
+}
+.in-input.is-wide {
+  width: auto; flex: 1; padding: 0.5rem 0.7rem;
+  background: var(--bg-2); border: 1px solid var(--rule-2); border-radius: 4px;
+  font-family: var(--body);
+}
+.in-go {
+  background: var(--ink); color: var(--bg-2); border-radius: 4px;
+  padding: 0.5rem 0.95rem; font-size: 0.8rem; font-weight: 500;
+  transition: background 0.18s var(--ease);
+}
+.in-go:hover { background: var(--accent); }
+
+.in-choices { display: flex; flex-direction: column; gap: 0.4rem; }
+.in-choice {
+  text-align: left; background: var(--bg-2);
+  border: 1px solid var(--rule-2); border-radius: 4px;
+  padding: 0.55rem 0.8rem; transition: all 0.18s var(--ease);
+}
+.in-choice b { display: block; font-size: 0.86rem; font-weight: 500; color: var(--ink); }
+.in-choice span { font-family: var(--mono); font-size: 0.68rem; color: var(--ink-3); }
+.in-choice:hover {
+  border-color: var(--accent); transform: translateX(2px);
+}
+.in-choice:hover b, .in-choice:hover span { color: var(--accent-dk); }
+
+/* --- ready --------------------------------------------------------------- */
+
+.in-ready { border-left: 2px solid var(--ok); }
+.in-summary { display: flex; flex-direction: column; gap: 0.05rem; margin-bottom: 0.9rem; }
+.in-summary > div {
+  display: grid; grid-template-columns: 9.5rem 1fr; gap: 0.6rem;
+  padding: 0.4rem 0; border-bottom: 1px solid var(--rule);
+}
+.in-summary dt {
+  font-family: var(--mono); font-size: 0.66rem; text-transform: uppercase;
+  letter-spacing: 0.1em; color: var(--ink-3); padding-top: 0.15rem;
+}
+.in-summary dd { font-size: 0.87rem; color: var(--ink); }
+.in-summary dd.num { font-family: var(--display); font-size: 1.35rem; line-height: 1.1; }
+
+.in-actions { display: flex; gap: 0.5rem; align-items: center; }
+.in-start {
+  background: var(--ok); color: #fff; border-radius: 4px;
+  padding: 0.6rem 1.1rem; font-size: 0.86rem; font-weight: 600;
+  transition: background 0.18s var(--ease);
+}
+.in-start:hover { background: #24563e; }
+.in-edit { font-size: 0.78rem; color: var(--ink-3); padding: 0.6rem 0.4rem; }
+.in-edit:hover { color: var(--accent); }
+
+.in-wait { color: var(--ink-3); font-size: 0.87rem; }
+.in-error { border-left: 2px solid var(--accent); color: var(--accent-dk); font-size: 0.87rem; }
+
+/* ===========================================================================
+   TIPS — every term that means something specific, explaining itself in place
+
+   "Held" is not "pending" and a bound is not a setting. Those distinctions are
+   the project; none of them survive being guessed at from a short label.
+   ======================================================================== */
+
+[data-tip] { cursor: help; }
+button[data-tip], .tab[data-tip], .chip[data-tip] { cursor: pointer; }
+
+.tip {
+  position: fixed; z-index: 90; max-width: 20rem;
+  background: var(--bg-deep); color: #e6efe9;
+  border-radius: 6px; padding: 0.6rem 0.75rem;
+  font-size: 0.755rem; line-height: 1.55;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.22);
+  opacity: 0; transform: translateY(3px);
+  transition: opacity 0.13s var(--ease), transform 0.13s var(--ease);
+  pointer-events: none;
+}
+.tip.is-on { opacity: 1; transform: none; }
+.tip-title {
+  display: block; font-family: var(--mono); font-size: 0.62rem; font-weight: 500;
+  text-transform: uppercase; letter-spacing: 0.13em;
+  color: #9dc3ae; margin-bottom: 0.28rem;
+}
+.tip::after {
+  content: ''; position: absolute; left: var(--arrow, 50%);
+  margin-left: -5px; border: 5px solid transparent;
+}
+.tip:not(.is-below)::after { top: 100%; border-top-color: var(--bg-deep); }
+.tip.is-below::after { bottom: 100%; border-bottom-color: var(--bg-deep); }
+
+@media (prefers-reduced-motion: reduce) {
+  .in-card { animation: none; }
+  .tip { transition: none; }
+}
+
+
+/* --- degraded, said out loud ---------------------------------------------
+   With no key the decomposer is deterministic, nothing judges a payment and
+   orders are simulated. Each of those is the right way to fail. Rendering such
+   a run identically to a full one is not. */
+
+.degraded {
+  flex-shrink: 0; margin: 0 1.6rem; padding: 0.6rem 0.8rem;
+  background: var(--held-soft); border-left: 2px solid var(--held);
+  border-radius: 0 4px 4px 0;
+  font-size: 0.76rem; line-height: 1.55; color: var(--ink-2);
+}
+.degraded b { font-weight: 600; color: var(--held); }
+.degraded[hidden] { display: none; }
+
+.opt.is-unavailable { color: var(--ink-3); }
+.opt.is-unavailable input { cursor: not-allowed; }

@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Pocket Change — Bounded, revocable spending authority for AI agents. Cryptographically enforced, semantically monitored." />
+    <title>Pocket Change</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=VT323&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+  </head>
+  <body>
+
+    <!-- COVER — full-viewport, no traditional navbar -->
+    <section class="cover" id="cover">
+
+      <!-- TOP EDGE: corner metadata -->
+      <div class="cover-top">
+        <span class="cover-meta mono">v0.1.0 · Apache-2.0 · arXiv:2603.24775</span>
+        <nav class="cover-nav">
+          <a href="#guarantees">Guarantees</a>
+          <a href="#the-shape">The Shape</a>
+          <a href="#monitor">Monitor</a>
+          <a href="https://github.com/Somay-kousis/Pocket-Change" target="_blank" rel="noopener">GitHub ↗</a>
+        </nav>
+      </div>
+
+      <!-- CENTRE: the title is the hero -->
+      <div class="cover-centre">
+        <h1 class="cover-title">
+          <span class="ct-line ct-line-1">POCKET</span>
+          <span class="ct-line ct-line-2">CHANGE</span>
+        </h1>
+        <div class="cover-rule"></div>
+        <p class="cover-deck">
+          Bounded, revocable spending authority for AI agents.<br>
+          The agent is assumed compromised. That is the premise, not a caveat.
+        </p>
+      </div>
+
+      <!-- BOTTOM EDGE: stats + scroll cue -->
+      <div class="cover-bottom">
+        <div class="cover-stats">
+          <span class="cs-item">
+            <span class="cs-n" id="stat-bounds">7</span>
+            bounds, none a model
+          </span>
+          <span class="cs-sep">—</span>
+          <span class="cs-item">
+            <span class="cs-n" id="stat-tests">542</span>
+            tests offline
+          </span>
+          <span class="cs-sep">—</span>
+          <span class="cs-item">
+            <span class="cs-n" id="stat-sok">10/12</span>
+            SoK vectors defended
+          </span>
+        </div>
+        <p class="cover-live" id="cover-live"></p>
+        <button class="btn-primary" id="hero-cta">Open Sandbox ↗</button>
+      </div>
+
+    </section>
+
+    <!-- GUARANTEES — editorial list, no cards -->
+    <section class="guarantees-section" id="guarantees">
+      <div class="section-inner">
+        <h2 class="section-h">What the system guarantees.</h2>
+        <p class="section-sub">Eight constraints. Six hold with no model running at all; the two that need one can refuse, never authorise.</p>
+
+        <div class="guarantee-list">
+
+          <div class="guarantee-row">
+            <span class="g-index">01</span>
+            <div class="g-body">
+              <h3>Budget ceiling — cryptographic</h3>
+              <p>The budget lives in a Biscuit capability token signed by the root key. A block can only narrow the ceiling, never raise it. An agent that tries to spend more is refused before any network call.</p>
+            </div>
+            <span class="g-kind mono">token</span>
+          </div>
+
+          <div class="guarantee-row">
+            <span class="g-index">02</span>
+            <div class="g-body">
+              <h3>Depth — derived, never claimed</h3>
+              <p><code>depth = token.block_count() - 1</code>. An agent that fills in its own depth is recorded as evidence, not believed. A longer chain means a narrower agent, by construction.</p>
+            </div>
+            <span class="g-kind mono">token</span>
+          </div>
+
+          <div class="guarantee-row">
+            <span class="g-index">03</span>
+            <div class="g-body">
+              <h3>Cumulative spend — ledger enforced</h3>
+              <p>Every payment attempt is counted against the mandate's running balance before clearing. Reservation holds the balance until the payment settles or the TTL expires.</p>
+            </div>
+            <span class="g-kind mono">ledger</span>
+          </div>
+
+          <div class="guarantee-row">
+            <span class="g-index">04</span>
+            <div class="g-body">
+              <h3>Idempotency — replay safe</h3>
+              <p>A unique key per payment attempt. Replays within the TTL are caught and deduplicated — a gap Razorpay's Orders API leaves open. The gateway closes it.</p>
+            </div>
+            <span class="g-kind mono">ledger</span>
+          </div>
+
+          <div class="guarantee-row">
+            <span class="g-index">05</span>
+            <div class="g-body">
+              <h3>Scope — cryptographic at the leaves, policy above them</h3>
+              <p>The agent that reads seller-written pages holds <code>("search",)</code> and a budget of zero; the agent that pays holds <code>("pay",)</code> and cannot search. Siblings, not a chain — a child would force the payer to hold <code>search</code> for it to inherit. Above them it is weaker and we say so: attenuation cannot express <em>grant without use</em>, so a branch holds everything it confers and is stopped by the gateway, not by the token.</p>
+            </div>
+            <span class="g-kind mono">token + policy</span>
+          </div>
+
+          <div class="guarantee-row">
+            <span class="g-index">06</span>
+            <div class="g-body">
+              <h3>Semantic monitor — separable</h3>
+              <p>An optional model call judges intent against cart contents, and all three verdicts now act: allow, <em>defer</em> — settle a smaller amount — and escalate to a person. Switching it off removes no cryptographic guarantee. It fails open, so exhausting a quota removes the second layer rather than blocking the first.</p>
+            </div>
+            <span class="g-kind mono">monitor</span>
+          </div>
+
+          <div class="guarantee-row">
+            <span class="g-index">07</span>
+            <div class="g-body">
+              <h3>The plan is judged before authority exists</h3>
+              <p>Every bound above is arithmetic, and a decomposition can divide its budget perfectly while buying the wrong things. A second model reviews each split at the one seam that matters — after the bounds, before any token is minted. It can refuse or escalate; it can never authorise. Unreachable, the run proceeds exactly as it would have without it.</p>
+            </div>
+            <span class="g-kind mono">critic</span>
+          </div>
+
+          <div class="guarantee-row">
+            <span class="g-index">08</span>
+            <div class="g-body">
+              <h3>Reputation a seller cannot write</h3>
+              <p>A supplier's own review count is a field it fills in. This record is written by the gateway at settlement — who was paid, and how each dealing went: refusals, escalations, human vetoes, pages that addressed our agent instead of describing goods. A tally is not a reputation, so concerns lead.</p>
+            </div>
+            <span class="g-kind mono">ledger</span>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- THE SHAPE — architecture -->
+    <section class="shape-section" id="the-shape">
+      <div class="section-inner">
+        <h2 class="section-h">The shape.</h2>
+        <p class="section-sub">One task becomes a tree. Every edge appends a block to the token above it, so each layer is strictly narrower than its parent and no holder anywhere can widen anything.</p>
+
+        <div class="arch-diagram">
+          <pre class="arch-pre">
+   YOU ─── sign one ceiling ───▶  MANDATE          ₹6,00,000   depth 0
+                                     │
+                 ┌───────────────────┼───────────────────┐
+                 ▼                   ▼                   ▼
+            engineering           design            operations    depth 1
+            ₹2,00,000            ₹2,00,000          ₹2,00,000
+            confers ·                                              ← holds pay
+            cannot spend                                             only to
+                 │                                                   grant it
+        ┌────────┼────────┐
+        ▼        ▼        ▼
+   workstations  peripherals  furniture                          depth 2
+     ₹66,666      ₹66,666      ₹66,666
+                     │
+                     │   below the floor ─── stop splitting, act
+                     ▼
+        ┌────────────┴────────────┐
+        ▼                         ▼
+   ┌─────────┐              ┌──────────┐
+   │  PAYER  │              │  LOOKER  │                        depth 3
+   │  ₹7,407 │  siblings ── │    ₹0    │
+   │ [pay]   │   never a    │ [search] │
+   │         │    chain     │          │
+   └────┬────┘              └────┬─────┘
+        │                        │
+        ▼                        ▼
+   ┌── GATEWAY ──┐         the open web
+   │ signature   │         supplier pages,
+   │ expiry      │         written by whoever
+   │ depth       │         wants the order
+   │ scope       │
+   │ cum. spend  │         it can read them.
+   │ idempotency │         it holds no money.
+   │ reservation │
+   └─────────────┘
+
+   as many layers as the budget allows · 121 nodes at depth 4 · 40 model calls
+          </pre>
+        </div>
+
+        <div class="shape-notes">
+          <div class="shape-note">
+            <span class="note-label">Why the looker is a sibling, not a child</span>
+            <p>Attenuation is monotonic: a child holds a subset of its parent. Hanging the searcher <em>below</em> the payer would force the payer to hold <code>search</code> for the child to inherit it — putting &ldquo;reads seller-written pages&rdquo; and &ldquo;can spend&rdquo; in one token. Siblings are the only safe shape, and the same reasoning that separated shopper from payer.</p>
+          </div>
+          <div class="shape-note">
+            <span class="note-label">What a branch can and cannot do</span>
+            <p>A branch must <em>hold</em> everything it confers — a parent without <code>pay</code> cannot grant <code>pay</code>. So branches carry both and are refused by the gateway if they ever try to spend. That line is policy, not cryptography, and is stated here rather than discovered later. At the leaves the separation <em>is</em> cryptographic.</p>
+          </div>
+          <div class="shape-note">
+            <span class="note-label">The floor that terminates the tree</span>
+            <p>Below a per-run floor, the funnel acts rather than splitting. Budget strictly decreases at every level, so depth is bounded by <code>log(budget / floor)</code> regardless of the depth cap — the floor is the real terminator, and it has to be set relative to the ceiling. Left too low, every node stays &ldquo;big enough to split&rdquo; and nothing is ever a leaf.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MONITOR — terminal -->
+    <section class="monitor-section" id="monitor">
+      <div class="section-inner">
+        <h2 class="section-h">Live vault monitor.</h2>
+        <p class="section-sub">Every enforcement decision, in the order it happened. Reads a running gateway when it can reach one, and says <b>recorded</b> when it cannot.</p>
+
+        <div class="terminal-window">
+          <div class="terminal-bar">
+            <div class="t-dots">
+              <span class="t-dot"></span><span class="t-dot"></span><span class="t-dot"></span>
+            </div>
+            <span class="t-title">pocketchange watch</span>
+            <span class="t-live" id="t-live-indicator">● …</span>
+          </div>
+          <div class="terminal-body" id="terminal-output"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="site-footer">
+      <div class="footer-art-wrap">
+        <div class="footer-fade"></div>
+        <img src="/footer-art.jpg" alt="Pixel art landscape" class="footer-art" />
+        <div class="footer-text-overlay">
+          <p class="footer-quote">The agent holds no payment credential.<br>It holds tokens it cannot widen.</p>
+          <nav class="footer-nav">
+            <a href="https://arxiv.org/abs/2603.24775" target="_blank">AIP — arXiv:2603.24775</a>
+            <a href="https://arxiv.org/abs/2604.15367" target="_blank">SoK — arXiv:2604.15367</a>
+            <a href="https://arxiv.org/abs/2312.06942" target="_blank">AI Control — arXiv:2312.06942</a>
+            <a href="#">Apache-2.0</a>
+          </nav>
+        </div>
+      </div>
+    </footer>
+
+    <script type="module" src="/main.js"></script>
+  </body>
+</html>
