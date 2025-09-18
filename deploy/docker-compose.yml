@@ -1,0 +1,49 @@
+# DynamoDB Local. This is the whole infrastructure for running Pocket Change
+# on a laptop - no AWS account, no credentials, no card.
+#
+#   docker compose -f deploy/docker-compose.yml up -d
+#   export POCKETCHANGE_DDB_ENDPOINT=http://localhost:8000
+#   .venv/bin/python scripts/smoke_dynamodb.py
+#
+# The gateway itself is not in here on purpose. It is a `uvicorn` command away
+# and putting it in a container during development costs a rebuild on every
+# edit for nothing.
+
+services:
+  dynamodb:
+    image: amazon/dynamodb-local:latest
+    container_name: pocketchange-dynamodb
+    ports:
+      - "8000:8000"
+    # -sharedDb keeps one database file regardless of which fake credentials a
+    # client presents. Without it, boto3 picking up a different access key -
+    # which it will, between a shell and a test run - silently opens a second,
+    # empty database, and the table you created a minute ago is not there.
+    #
+    # `user: root` so the process can write to the volume.
+    #
+    # The image runs as uid 1000, and a named volume is created owned by root
+    # whichever path it is mounted at - including under that user's own home.
+    # The failure mode is worth knowing because it does not look like a
+    # permissions problem: DynamoDB Local starts, prints its configuration
+    # cheerfully, passes a TCP health check, accepts connections, and then never
+    # answers a single request, while "[14] unable to open database file"
+    # repeats in a log nobody is tailing. From the client side it is an
+    # unexplained read timeout against a container that says it is healthy.
+    #
+    # Root in a throwaway local database container is the ordinary trade. The
+    # alternative that avoids it is `-inMemory`, which costs persistence across
+    # restarts.
+    command: ["-jar", "DynamoDBLocal.jar", "-sharedDb", "-dbPath", "/data"]
+    working_dir: /home/dynamodblocal
+    user: root
+    volumes:
+      - dynamodb-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/8000 && echo ok >&3"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  dynamodb-data:
